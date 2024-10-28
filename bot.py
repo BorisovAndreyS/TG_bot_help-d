@@ -2,7 +2,7 @@ from telegram import Update
 from telegram.ext import ApplicationBuilder, MessageHandler, filters, \
     CallbackQueryHandler, CommandHandler, ContextTypes
 
-from credentials import ChatGPT_TOKEN
+from credentials import ChatGPT_TOKEN, TG_token
 from gpt import ChatGptService
 from util import load_message, load_prompt, send_text_buttons, send_text, \
     send_image, show_main_menu, Dialog, default_callback_handler
