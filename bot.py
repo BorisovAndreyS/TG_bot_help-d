@@ -16,8 +16,9 @@ import logging
 #     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
 # )
 
-# Определяем состояния для разных меню #Меню выбора персонажа
-MENU_MAIN, MENU_ECHO, MENU_RANDOM, MENU_GPT, MENU_TALK, ONE, TWO, THREE, FOUR, FIVE = range(10)
+# Определяем состояния для разных меню #Меню выбора персонажа#Menu QUIZ
+(MENU_MAIN, MENU_ECHO, MENU_RANDOM, MENU_GPT,
+ MENU_TALK, ONE, TWO, THREE, FOUR, FIVE, MENU_QUIZ, QUIZ1, QUIZ2, QUIZ3, QUIZ4) = range(15)
 
 
 chat_gpt = ChatGptService(ChatGPT_TOKEN)
@@ -182,10 +183,10 @@ async def talk_button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE
     #Обработка кнопки talk
     query = update.callback_query
     await query.answer()
-
     select_key = query.data
+    print(select_key)
     if select_key == str(MENU_MAIN):
-        return await back_to_main()
+        return await back_to_main(update, context)
 
     select_star = star_human.get(select_key)
     if not select_star:
@@ -220,6 +221,45 @@ async def handle_talk(update: Update, context: ContextTypes.DEFAULT_TYPE, star_h
 
 
 
+#Задача 5. Quiz
+async def quiz(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    #Загрузили сообщение
+    text_talk = load_message('quiz')
+    #Создали кнопки
+    keyboard = [
+        [
+            InlineKeyboardButton("1", callback_data=str(QUIZ1)),
+            InlineKeyboardButton("2", callback_data=str(QUIZ2)),
+            InlineKeyboardButton("3", callback_data=str(QUIZ3)),
+            InlineKeyboardButton("4", callback_data=str(QUIZ4)),
+            InlineKeyboardButton("Выход", callback_data=str(MENU_MAIN)),
+        ]
+    ]
+    #Переменная для хранения выбора кнопки
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    #Ждем выбора кнопки
+    await update.message.reply_text(text_talk, reply_markup=reply_markup)
+
+    return MENU_QUIZ
+
+
+async def quiz_button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    #Обработчик кнопок
+    query = update.callback_query
+    await query.answer()
+    #Проверка на нажатие выхода
+    select_key = query.data
+
+    if select_key == str(MENU_MAIN):
+        return await back_to_main(update, context)
+
+
+
+    return MENU_QUIZ
+
+
+async def handle_quiz(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    pass
 
 
 #функция возврата в главное меню
@@ -241,6 +281,7 @@ def main():
                 CommandHandler('random', random),
                 CommandHandler('gpt', gpt),
                 CommandHandler('talk', talk),
+                CommandHandler('quiz', quiz),
             ],
             MENU_ECHO: [
                 MessageHandler(filters.TEXT & ~filters.COMMAND, handle_echo),
@@ -258,7 +299,12 @@ def main():
             ],
             MENU_TALK: [
                 MessageHandler(filters.TEXT & ~filters.COMMAND, handle_talk),
-                CallbackQueryHandler(talk_button_handler, pattern="^(5|6|7|8|9|MENU_MAIN)$"),
+                CallbackQueryHandler(talk_button_handler, pattern="^(5|6|7|8|9|0)$"),
+                CommandHandler('back', back_to_main)
+            ],
+            MENU_QUIZ: [
+                MessageHandler(filters.TEXT & ~filters.COMMAND, handle_quiz),
+                CallbackQueryHandler(quiz_button_handler, pattern="^(11|12|13|14|0)$"),
                 CommandHandler('back', back_to_main)
             ],
         },
